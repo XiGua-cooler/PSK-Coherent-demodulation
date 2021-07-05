@@ -5,8 +5,8 @@ function [ ModSignal, BasebandSignal ] = dqpsk(  SymData, SymNum, M, CarrFre, Ba
 
     x = SymData;
     BR = Band;
-    Rb = log2(M)*Band/2;
-    Tb = 1/Rb;
+    Rb = log2(M)*Band;
+    Tb = 1/Band;
     STL = SymNum*Tb;
     SR = fs;
     

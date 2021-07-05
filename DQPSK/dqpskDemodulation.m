@@ -16,6 +16,20 @@
 %                                                                                                           |
 %                                       Function introduction                                               |
 %   This function demodulates DQPSK.                                                                        |
+%                                                                                                           |
+%                                              NOTE                                                         |
+%                                                                                                           |
+%   When the demodulated data is -1, it means invalid data.                                                 |
+%                                                                                                           |
+%                                      Bit error rate test code                                             |
+% Example:                                                                                                  |
+%                                                                                                           |
+%   errorCodeCnt = 0;                                                                                       |
+%   for k = 6:length(ModSignal)                                                                             |
+%       if ModSignal(k) ~= SymData(k-5);                                                                    |
+%           errorCodeCnt = errorCodeCnt+1;                                                                  |
+%       end                                                                                                 |
+%   end                                                                                                     |
 %------------------------------------------------------------------------------------------------------------
 function [ ModSignal ] = dqpskDemodulation( SymData, SymNum, M, CarrFre, Band, fs )
 
@@ -80,7 +94,7 @@ function [ ModSignal ] = dqpskDemodulation( SymData, SymNum, M, CarrFre, Band, f
     mk = zeros( 1, outputDataLength);
     uk = zeros( 1, outputDataLength);
     resampleOutputData = zeros( 1, outputDataLength);
-    bpskAngle = zeros(1, outputDataLength);
+    pskAngle = zeros(1, outputDataLength);
     basebandSignal = zeros(1, (outputDataLength)/4);
 %>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>END<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     %----------------------Generate the Local carrier----------------------
@@ -228,24 +242,38 @@ end
 
 %----------------------------------------------END-----------------------------------------------%
 %>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Symbol Synchronize<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>BPSK Decoding<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+%>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>DQPSK Decoding<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     for n = 1: cnt-1
-        bpskAngle(n) = atan( imag(resampleOutputData(n)) / real(resampleOutputData(n)) );
+        %------------------------Coordinate transformation-----------------------%
+        % Convert rectangular coordinates to polar coordinates.
+        % The negative direction of the imaginary axis is 0 degrees, 
+        % and the counterclockwise rotation angle increases£¬maximum 360 degrees
+        pskAngle(n) = atan( imag(resampleOutputData(n))/real(resampleOutputData(n)) );
         if real(resampleOutputData(n)) > 0
-            bpskAngle(n) = bpskAngle(n) + pi/2;
+            pskAngle(n) = pskAngle(n) + pi/2;
         elseif real(resampleOutputData(n)) < 0
-            bpskAngle(n) = bpskAngle(n) + 3*pi/2;
+            pskAngle(n) = pskAngle(n) + 3*pi/2;
         else
             if imag(resampleOutputData(n)) < 0
-                bpskAngle(n) = bpskAngle(n) + pi/2;
+                pskAngle(n) = pskAngle(n) + pi/2;
             end
         end
-        if (bpskAngle(n) > pi/4) && (bpskAngle(n) < 3*pi/4)
-            basebandSignal(n) = 1;
-        else
+        pskAngle(n) = rad2deg(pskAngle(n));
+        %----------------------------------END-----------------------------------%
+    end
+
+    for n = 1:cnt-1
+        if (pskAngle(n) > 22.5) && (pskAngle(n) < 112.5)       
+            basebandSignal(n) = 3;
+        elseif (pskAngle(n) > 112.5) && (pskAngle(n) < 202.5)  
+            basebandSignal(n) = 2;
+        elseif (pskAngle(n) > 202.5) && (pskAngle(n) < 292.5) 
             basebandSignal(n) = 0;
+        else
+            basebandSignal(n) = 1;
         end
     end
 %>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>END<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-ModSignal = resampleOutputData(1:cnt-1); % This is the output of the final demodulated signal 
+basebandSignal(1:5) = -1;
+ModSignal = basebandSignal(1:cnt-1); % This is the output of the final demodulated signal 
 end

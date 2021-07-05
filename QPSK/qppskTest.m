@@ -16,14 +16,7 @@ SymData    = randi([0, M-1], 1, SymNum);
 %   Add noise to the modulated signal
 qpskReceive=Channel(real(qpskModulatedSignal), SNR, CluLen);
 %   Demodulate the receive signal
-[ ModSignal ] = qppskDemodulation( real(qpskReceive), SymNum, M, CarrFre, Band, fs );
-
-subplot(2,1,2);
-plot(ModSignal(4950:5000));
-subplot(2,1,1);
-plot(basebandSignal(4950:5000));
-
-
+[ ModSignal ] = qppskDemodulation( real(qpskReceive), SymNum, M, CarrFre, Band, fs );  
 
 
 

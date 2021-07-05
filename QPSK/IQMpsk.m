@@ -6,8 +6,8 @@ function [ ModSignal, BebandSignal ] = IQMpsk( SymData, SymNum, M, CarrFre, Band
 % 载波频率
 %Band 带宽
 %fs 采样率
-    Rb = log2(M)*Band/2;
-    Tb = 1/Rb;
+    Rb = log2(M)*Band;
+    Tb = 1/Band;
     
     numoflength = log(M)/log(2);
     graymat = 0:M-1;

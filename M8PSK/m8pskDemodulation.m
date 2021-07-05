@@ -4,7 +4,6 @@
 %                           (intrduction = Coherent demodulation of the input modulated signal.)            |
 %   <SymNum>            --- (Datatype = Real number)                                                        |
 %                           (intrduction = Baseband data length.)                                           |
-%                                                                                                           |
 %   <fs>                --- (Datatype = Real number)                                                        |
 %                           (intrduction = Specifies the sampling frequency of the ADC, the unit is Hz.)    |
 %   <Band>              --- (Datatype = Real number)                                                        |
@@ -15,9 +14,28 @@
 %                           (intrduction = Demodulated baseband signal.)                                    |
 %                                                                                                           |
 %                                       Function introduction                                               |
-%   This function demodulates QPSK.                                                                         |
+%   This function demodulates 8PSK.                                                                         |
+%                                                                                                           |
+%                                              NOTE                                                         |
+%                                                                                                           |
+%   When the demodulated data is -1, it means invalid data.                                                 |
+%                                                                                                           |
+%                                      Bit error rate test code                                             |
+% Example:                                                                                                  |
+%                                                                                                           |
+%   errorCodeCnt = 0;                                                                                       |
+%   for k = 10:length(ModSignal)                                                                            |
+%       if ModSignal(k) ~= SymData(k);                                                                      |
+%           errorCodeCnt = errorCodeCnt+1;                                                                  |
+%       end                                                                                                 |
+%   end                                                                                                     |
 %------------------------------------------------------------------------------------------------------------
 function [ ModSignal ] = m8pskDemodulation( SymData, SymNum, M, CarrFre, Band, fs )
+
+    %-------这两行代码确实看起来很离谱，但是不要删，删了就不能用了------%
+    [ g, h ] = IQMpsk( [1 2 3 4 5 6 7 0], 8, M, CarrFre, Band, fs );
+    SymData(1:length(g)) = real(g);
+    %---------------------------谢谢合作 ---------------------------%
 
     inputDataLength       = length(SymData);
     carrierFrequency      = CarrFre;
@@ -133,8 +151,8 @@ for n = 1:outputDataLength
     %-----------------------END------------------------%
     %-----------------------LoopFilter------------------------%
 
-        tempInternalOutput(n) = bufferFirst(2) + (0.015) * phaseErroDetecerOutputData(n);
-        bufferFirst(1) = (0.015/32)*phaseErroDetecerOutputData(n) + bufferFirst(2);
+        tempInternalOutput(n) = bufferFirst(2) + (0.0005) * phaseErroDetecerOutputData(n);
+        bufferFirst(1) = (0.0005/256)*phaseErroDetecerOutputData(n) + bufferFirst(2);
         bufferSecond(1) = bufferSecond(2) - tempInternalOutput(n);
         loopFilterOutputData(n) = mod(bufferSecond(2), 6.28);
 
@@ -225,7 +243,7 @@ end
 
 %----------------------------------------------END-----------------------------------------------%
 %>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Symbol Synchronize<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>BPSK Decoding<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< 
+%>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>8PSK Decoding<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< 
     for n = 1: cnt-1
         %------------------------Coordinate transformation-----------------------%
         % Convert rectangular coordinates to polar coordinates.
@@ -264,6 +282,7 @@ end
         end
     end
 %>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>END<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+basebandSignal(1:9) = -1;
 ModSignal = basebandSignal(1:cnt-1); % This is the output of the final demodulated signal 
 %ModSignal = resampleOutputData(1:cnt-1);
 end

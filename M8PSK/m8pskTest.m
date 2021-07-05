@@ -11,19 +11,12 @@ M          = 8;      %8PSK
 SymNum     = 5000;
 SymData    = randi([0, M-1], 1, SymNum);
 
-
-%   Generate QPPSK modulated signal
+%   Generate 8PSK modulated signal
 [ m8pskModulatedSignal, basebandSignal ] = IQMpsk( SymData, SymNum, M, CarrFre, Band, fs );
 %   Add noise to the modulated signal
 m8pskReceive=Channel(real(m8pskModulatedSignal), SNR, CluLen);
 %   Demodulate the receive signal
-[ ModSignal ] = m8pskDemodulation( real(m8pskReceive), SymNum, M, CarrFre, Band, fs );
-
-subplot(2,1,1);
-plot(ModSignal(4760:4800));
-subplot(2,1,2);
-plot(basebandSignal(4760:4800));
-
+[ ModSignal ] = m8pskDemodulation( real(m8pskReceive), SymNum, M, CarrFre, Band, fs );    
 
 
 

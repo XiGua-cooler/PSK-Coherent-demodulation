@@ -4,7 +4,6 @@
 %                           (intrduction = Coherent demodulation of the input modulated signal.)            |
 %   <SymNum>            --- (Datatype = Real number)                                                        |
 %                           (intrduction = Baseband data length.)                                           |
-%                                                                                                           |
 %   <fs>                --- (Datatype = Real number)                                                        |
 %                           (intrduction = Specifies the sampling frequency of the ADC, the unit is Hz.)    |
 %   <Band>              --- (Datatype = Real number)                                                        |
@@ -15,9 +14,28 @@
 %                           (intrduction = Demodulated baseband signal.)                                    |
 %                                                                                                           |
 %                                       Function introduction                                               |
-%   This function demodulates bpsk.                                                                         |
+%   This function demodulates BPSK.                                                                         |
+%                                                                                                           |
+%                                              NOTE                                                         |
+%                                                                                                           |
+%   When the demodulated data is -1, it means invalid data.                                                 |
+%                                                                                                           |
+%                                      Bit error rate test code                                             |
+% Example:                                                                                                  |
+%                                                                                                           |
+%   errorCodeCnt = 0;                                                                                       |
+%   for k = 3:length(ModSignal)                                                                             |
+%       if ModSignal(k) ~= SymData(k);                                                                      |
+%           errorCodeCnt = errorCodeCnt+1;                                                                  |
+%       end                                                                                                 |
+%   end                                                                                                     |
 %------------------------------------------------------------------------------------------------------------
-function [ ModSignal ] = bpskDemodulation( SymData, SymNum, M, CarrFre, Band, fs )
+function [ ModSignal, bbb ] = bpskDemodulation( SymData, SymNum, M, CarrFre, Band, fs )
+
+    %-------这两行代码确实看起来很离谱，但是不要删，删了就不能用了------%
+    [ g, h ] = IQMpsk( [1 0], 2, M, CarrFre, Band, fs );
+    SymData(1:length(g)) = real(g);
+    %---------------------------谢谢合作 ---------------------------%
 
     inputDataLength       = length(SymData);
     carrierFrequency      = CarrFre;
@@ -90,6 +108,7 @@ function [ ModSignal ] = bpskDemodulation( SymData, SymNum, M, CarrFre, Band, fs
 %>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Down Convertion<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     multiplierCosOutputData = localCosData .* [SymData 0];
     multiplierSinOutputData = localSinData .* [SymData 0];
+
     %-------------------------------Achieve FIR Filter------------------------------%
 
         for n = firFilterCoffLength:inputDataLength-firFilterCoffLength
@@ -245,5 +264,9 @@ end
         end
     end
 %>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>END<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-ModSignal = basebandSignal(1:cnt-1); % This is the output of the final demodulated signal 
+
+    basebandSignal(1:2) = -1;
+    ModSignal = basebandSignal(1:cnt-1); % This is the output of the final demodulated signal 
+
+    bbb = mk;
 end

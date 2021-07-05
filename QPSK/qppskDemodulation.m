@@ -4,7 +4,6 @@
 %                           (intrduction = Coherent demodulation of the input modulated signal.)            |
 %   <SymNum>            --- (Datatype = Real number)                                                        |
 %                           (intrduction = Baseband data length.)                                           |
-%                                                                                                           |
 %   <fs>                --- (Datatype = Real number)                                                        |
 %                           (intrduction = Specifies the sampling frequency of the ADC, the unit is Hz.)    |
 %   <Band>              --- (Datatype = Real number)                                                        |
@@ -16,8 +15,27 @@
 %                                                                                                           |
 %                                       Function introduction                                               |
 %   This function demodulates QPSK.                                                                         |
+%                                                                                                           |
+%                                              NOTE                                                         |
+%                                                                                                           |
+%   When the demodulated data is -1, it means invalid data.                                                 |
+%                                                                                                           |
+%                                      Bit error rate test code                                             |
+% Example:                                                                                                  |
+%                                                                                                           |
+%   errorCodeCnt = 0;                                                                                       |
+%   for k = 5:length(ModSignal)                                                                             |
+%       if ModSignal(k) ~= SymData(k);                                                                      |
+%           errorCodeCnt = errorCodeCnt+1;                                                                  |
+%       end                                                                                                 |
+%   end                                                                                                     |
 %------------------------------------------------------------------------------------------------------------
 function [ ModSignal ] = qppskDemodulation( SymData, SymNum, M, CarrFre, Band, fs )
+
+    %-------这两行代码确实看起来很离谱，但是不要删，删了就不能用了------%
+    [ g, h ] = IQMpsk( [1 2 3 0], 2, M, CarrFre, Band, fs );
+    SymData(1:length(g)) = real(g);
+    %---------------------------谢谢合作 ---------------------------%
 
     inputDataLength       = length(SymData);
     carrierFrequency      = CarrFre;
@@ -226,7 +244,7 @@ end
 
 %----------------------------------------------END-----------------------------------------------%
 %>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Symbol Synchronize<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>BPSK Decoding<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+%>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>QPSK Decoding<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     for n = 1: cnt-1
         %------------------------Coordinate transformation-----------------------%
         % Convert rectangular coordinates to polar coordinates.
@@ -257,6 +275,6 @@ end
         end
     end
 %>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>END<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+basebandSignal(1:4) = -1;
 ModSignal = basebandSignal(1:cnt-1); % This is the output of the final demodulated signal 
-%ModSignal = pskAngle(1:cnt-1);
 end
